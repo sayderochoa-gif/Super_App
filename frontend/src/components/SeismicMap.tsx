@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { Earthquake } from '../types';
-import { Compass, Waves, Layers } from 'lucide-react';
+import { Compass, Waves } from 'lucide-react';
 
 interface SeismicMapProps {
   events: Earthquake[];
@@ -166,11 +166,7 @@ export const SeismicMap: React.FC<SeismicMapProps> = ({
       </MapContainer>
 
       {/* Basemap Switcher Controls (Top Right) */}
-      <div className="absolute top-4 right-4 z-20 bg-slate-900/90 backdrop-blur-md p-1.5 rounded-lg border border-slate-700/80 shadow-xl flex items-center gap-1">
-        <div className="px-2 py-1 text-[11px] font-bold text-slate-300 flex items-center gap-1 border-r border-slate-700/80 mr-1">
-          <Layers className="w-3 h-3 text-sky-400" />
-          <span className="hidden sm:inline">Capa Base:</span>
-        </div>
+      <div className="absolute top-4 right-4 z-20 bg-slate-900/90 backdrop-blur-md p-1 rounded-lg border border-slate-700/80 shadow-xl flex items-center gap-1">
         <button
           onClick={() => setActiveBasemap('streets')}
           className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
