@@ -9,7 +9,7 @@ interface SeismicMapProps {
   onSelectEvent: (id: string) => void;
 }
 
-type BasemapType = 'streets' | 'satellite' | 'voyager' | 'dark';
+type BasemapType = 'streets' | 'satellite';
 
 interface BasemapConfig {
   name: string;
@@ -30,18 +30,6 @@ const BASEMAPS: Record<BasemapType, BasemapConfig> = {
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
     attribution: '&copy; Esri, Maxar, Earthstar Geographics',
     maxZoom: 18
-  },
-  voyager: {
-    name: 'Cartográfico (Voyager)',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-    maxZoom: 19
-  },
-  dark: {
-    name: 'Modo Oscuro (Carto)',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
-    maxZoom: 19
   }
 };
 
@@ -202,26 +190,6 @@ export const SeismicMap: React.FC<SeismicMapProps> = ({
           }`}
         >
           🛰️ Satélite
-        </button>
-        <button
-          onClick={() => setActiveBasemap('voyager')}
-          className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
-            activeBasemap === 'voyager'
-              ? 'bg-sky-600 text-white shadow-sm'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          🧭 Claro
-        </button>
-        <button
-          onClick={() => setActiveBasemap('dark')}
-          className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
-            activeBasemap === 'dark'
-              ? 'bg-sky-600 text-white shadow-sm'
-              : 'text-slate-300 hover:text-white hover:bg-slate-800'
-          }`}
-        >
-          🌑 Oscuro
         </button>
       </div>
 
