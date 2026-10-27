@@ -3,7 +3,7 @@ import { KPIs, Earthquake, TimeseriesPoint } from '../types';
 import { api } from '../services/api';
 import { SeismicMap } from './SeismicMap';
 import { EventFeed } from './EventFeed';
-import { Activity, AlertTriangle, ShieldCheck, Waves, TrendingUp, BarChart3, Clock } from 'lucide-react';
+import { Activity, ShieldCheck, Waves, TrendingUp, BarChart2, Clock, Globe } from 'lucide-react';
 
 interface DashboardProps {
   newEventsFromSSE: Earthquake[];
@@ -29,7 +29,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ newEventsFromSSE }) => {
         api.getEvents({
           min_magnitude: minMagFilter > 0 ? minMagFilter : undefined,
           region: searchTerm || undefined,
-          limit: 100
+          limit: 150
         }),
         api.getTimeseries(24),
         api.getMagnitudeDistribution()
@@ -49,11 +49,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ newEventsFromSSE }) => {
 
   useEffect(() => {
     loadData();
-    const interval = setInterval(loadData, 30000); // refresh every 30s
+    const interval = setInterval(loadData, 20000); // 20s auto-refresh
     return () => clearInterval(interval);
   }, [minMagFilter, searchTerm]);
 
-  // Merge incoming SSE events dynamically
+  // Merge live incoming SSE events dynamically
   useEffect(() => {
     if (newEventsFromSSE.length > 0) {
       setEvents((prev) => {
@@ -66,85 +66,102 @@ export const Dashboard: React.FC<DashboardProps> = ({ newEventsFromSSE }) => {
 
   if (loading && !kpis) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="flex items-center justify-center h-[500px]">
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-sky-500 border-t-transparent"></div>
-          <span className="text-sm text-slate-400">Cargando telemetría sísmica...</span>
+          <div className="animate-spin rounded-full h-6 w-6 border-2 border-sky-500 border-t-transparent"></div>
+          <span className="text-xs font-mono text-slate-400">Sincronizando telemetría sísmica...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        {/* Total Events */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-lg relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Sismos (24h)</span>
-            <Activity className="w-4 h-4 text-sky-400" />
+    <div className="space-y-5">
+      
+      {/* Sleek KPI Metric Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        {/* Metric 1: 24h Count */}
+        <div className="p-4 rounded-xl bg-[#0d121c]/90 border border-white/[0.07] shadow-sm space-y-1.5">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Eventos (24h)</span>
+            <Activity className="w-3.5 h-3.5 text-sky-400" />
           </div>
-          <div className="text-2xl font-extrabold text-slate-100">{kpis?.events_24h ?? 0}</div>
-          <div className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            <span>Último: {kpis?.last_earthquake_time ? new Date(kpis.last_earthquake_time).toLocaleTimeString() : 'N/A'}</span>
+          <div className="text-2xl font-bold font-mono text-white tracking-tight">
+            {kpis?.events_24h ?? 0}
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-mono">
+            <Clock className="w-2.5 h-2.5" />
+            <span>Último: {kpis?.last_earthquake_time ? new Date(kpis.last_earthquake_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
           </div>
         </div>
 
-        {/* Max Magnitude */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-lg relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Magnitud Máx</span>
-            <TrendingUp className="w-4 h-4 text-rose-400" />
+        {/* Metric 2: Max Mag */}
+        <div className="p-4 rounded-xl bg-[#0d121c]/90 border border-white/[0.07] shadow-sm space-y-1.5">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Magnitud Pico</span>
+            <TrendingUp className="w-3.5 h-3.5 text-rose-400" />
           </div>
-          <div className="text-2xl font-extrabold text-rose-400">M {kpis?.max_magnitude_24h.toFixed(1) ?? '0.0'}</div>
-          <div className="text-[11px] text-slate-500 mt-1">Pico máximo en 24h</div>
+          <div className="text-2xl font-bold font-mono text-rose-400 tracking-tight">
+            M {kpis?.max_magnitude_24h.toFixed(1) ?? '0.0'}
+          </div>
+          <div className="text-[10px] text-slate-500 font-mono">
+            Umbral máximo registrado
+          </div>
         </div>
 
-        {/* Avg Magnitude */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-lg relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Magnitud Promedio</span>
-            <BarChart3 className="w-4 h-4 text-amber-400" />
+        {/* Metric 3: Avg Mag */}
+        <div className="p-4 rounded-xl bg-[#0d121c]/90 border border-white/[0.07] shadow-sm space-y-1.5">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Promedio</span>
+            <BarChart2 className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <div className="text-2xl font-extrabold text-amber-400">M {kpis?.avg_magnitude_24h.toFixed(1) ?? '0.0'}</div>
-          <div className="text-[11px] text-slate-500 mt-1">Nivel base global</div>
+          <div className="text-2xl font-bold font-mono text-amber-400 tracking-tight">
+            M {kpis?.avg_magnitude_24h.toFixed(1) ?? '0.0'}
+          </div>
+          <div className="text-[10px] text-slate-500 font-mono">
+            Media ponderada 24h
+          </div>
         </div>
 
-        {/* Tsunami Alerts */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-lg relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Alertas Tsunami</span>
-            <Waves className="w-4 h-4 text-cyan-400" />
+        {/* Metric 4: Tsunami Alerts */}
+        <div className="p-4 rounded-xl bg-[#0d121c]/90 border border-white/[0.07] shadow-sm space-y-1.5">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Alertas Tsunami</span>
+            <Waves className="w-3.5 h-3.5 text-cyan-400" />
           </div>
-          <div className={`text-2xl font-extrabold ${(kpis?.tsunami_alerts_24h ?? 0) > 0 ? 'text-rose-500 animate-pulse' : 'text-slate-100'}`}>
+          <div className={`text-2xl font-bold font-mono tracking-tight ${(kpis?.tsunami_alerts_24h ?? 0) > 0 ? 'text-rose-500 animate-pulse' : 'text-slate-100'}`}>
             {kpis?.tsunami_alerts_24h ?? 0}
           </div>
-          <div className="text-[11px] text-slate-500 mt-1">Disparos de advertencia</div>
+          <div className="text-[10px] text-slate-500 font-mono">
+            Disparos de protocolo costero
+          </div>
         </div>
 
-        {/* Quality Score */}
-        <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl shadow-lg relative overflow-hidden">
-          <div className="flex items-center justify-between text-slate-400 mb-2">
-            <span className="text-xs font-semibold uppercase tracking-wider">Calidad de Datos</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+        {/* Metric 5: Quality Gate */}
+        <div className="p-4 rounded-xl bg-[#0d121c]/90 border border-white/[0.07] shadow-sm space-y-1.5 col-span-2 lg:col-span-1">
+          <div className="flex items-center justify-between text-slate-400">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Calidad (Pandera)</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           </div>
-          <div className="text-2xl font-extrabold text-emerald-400">{kpis?.last_quality_score ?? 100}%</div>
-          <div className="text-[11px] text-slate-500 mt-1">Pandera Quality Gate</div>
+          <div className="text-2xl font-bold font-mono text-emerald-400 tracking-tight">
+            {kpis?.last_quality_score ?? 100}%
+          </div>
+          <div className="text-[10px] text-slate-500 font-mono">
+            Registros íntegros validados
+          </div>
         </div>
       </div>
 
-      {/* Main Interactive Grid: Map + Event Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      {/* Main Grid: Interactive Map + Event Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div className="lg:col-span-8">
           <SeismicMap
             events={events}
             selectedEventId={selectedEventId}
             onSelectEvent={(id) => setSelectedEventId(id)}
           />
         </div>
-        <div>
+        <div className="lg:col-span-4">
           <EventFeed
             events={events}
             totalEvents={totalEvents}
@@ -158,20 +175,24 @@ export const Dashboard: React.FC<DashboardProps> = ({ newEventsFromSSE }) => {
         </div>
       </div>
 
-      {/* Magnitude Distribution & Activity Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Magnitude Tiers Breakdown Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {magDist.map((item, idx) => (
-          <div key={idx} className="bg-slate-900/60 border border-slate-800/80 p-4 rounded-xl flex items-center justify-between">
+          <div
+            key={idx}
+            className="p-3.5 rounded-xl bg-[#0d121c]/70 border border-white/[0.05] flex items-center justify-between"
+          >
             <div>
-              <div className="text-xs text-slate-400">{item.tier}</div>
-              <div className="text-lg font-bold text-slate-100 mt-0.5">{item.count} eventos</div>
+              <div className="text-[11px] font-medium text-slate-400">{item.tier}</div>
+              <div className="text-base font-bold font-mono text-slate-100 mt-0.5">{item.count}</div>
             </div>
-            <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400">
-              #{idx + 1}
-            </div>
+            <span className="text-[10px] font-mono text-slate-500 px-2 py-0.5 rounded bg-slate-900 border border-white/[0.04]">
+              {totalEvents > 0 ? `${Math.round((item.count / totalEvents) * 100)}%` : '0%'}
+            </span>
           </div>
         ))}
       </div>
+
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, Shield, LogOut, Radio, FileText, Database, RefreshCw } from 'lucide-react';
+import { Activity, Radio, FileText, Database, LogOut, Shield, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 interface NavbarProps {
@@ -18,65 +18,66 @@ export const Navbar: React.FC<NavbarProps> = ({
   const { user, logout, isAdmin } = useAuth();
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Brand */}
+    <header className="sticky top-0 z-50 bg-[#080b11]/80 backdrop-blur-xl border-b border-white/[0.07]">
+      <div className="max-w-[1560px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14">
+          
+          {/* Brand Logo & Platform Name */}
           <div className="flex items-center gap-3">
-            <div className="bg-sky-500/10 p-2 rounded-lg border border-sky-500/30">
-              <Activity className="w-6 h-6 text-sky-400 animate-pulse" />
+            <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-tr from-sky-600 to-indigo-600 shadow-md shadow-sky-600/20">
+              <Activity className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-sky-400 via-cyan-300 to-indigo-400 bg-clip-text text-transparent">
+            <div className="flex items-baseline gap-2">
+              <span className="text-sm font-bold tracking-tight text-white font-mono uppercase">
                 SismoWatch
               </span>
-              <span className="text-xs text-slate-400 ml-2 font-mono">SuperApp</span>
+              <span className="text-[10px] text-slate-500 font-mono tracking-wider">v1.0</span>
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <nav className="flex items-center gap-1 sm:gap-2">
+          {/* Segmented Pill Navigation */}
+          <nav className="flex items-center p-1 rounded-xl bg-slate-900/60 border border-white/[0.06] text-xs">
             <button
               onClick={() => setCurrentTab('dashboard')}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all duration-150 ${
                 currentTab === 'dashboard'
-                  ? 'bg-sky-600 text-white shadow-md shadow-sky-600/20'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  ? 'bg-slate-800 text-white shadow-sm border border-white/[0.08]'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
               }`}
             >
-              <Activity className="w-4 h-4" />
-              <span>Dashboard</span>
+              <Activity className="w-3.5 h-3.5" />
+              <span>Telemetría Sísmica</span>
             </button>
 
             <button
               onClick={() => setCurrentTab('reports')}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all duration-150 ${
                 currentTab === 'reports'
-                  ? 'bg-sky-600 text-white shadow-md shadow-sky-600/20'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  ? 'bg-slate-800 text-white shadow-sm border border-white/[0.08]'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
               }`}
             >
-              <FileText className="w-4 h-4" />
+              <FileText className="w-3.5 h-3.5" />
               <span>Reportes IA</span>
             </button>
 
             <button
               onClick={() => setCurrentTab('pipeline')}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all duration-150 ${
                 currentTab === 'pipeline'
-                  ? 'bg-sky-600 text-white shadow-md shadow-sky-600/20'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  ? 'bg-slate-800 text-white shadow-sm border border-white/[0.08]'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
               }`}
             >
-              <Database className="w-4 h-4" />
+              <Database className="w-3.5 h-3.5" />
               <span>Pipeline & Calidad</span>
             </button>
           </nav>
 
-          {/* Live Status & User Info */}
-          <div className="flex items-center gap-4">
-            {/* Live SSE Pulse Indicator */}
-            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-xs">
+          {/* Real-time Status & Profile Controls */}
+          <div className="flex items-center gap-3">
+            {/* Live SSE Pulse Chip */}
+            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900/80 border border-white/[0.06] text-[11px] font-mono">
               <span className="relative flex h-2 w-2">
                 {sseConnected ? (
                   <>
@@ -87,42 +88,45 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                 )}
               </span>
-              <span className={sseConnected ? 'text-emerald-400 font-medium' : 'text-rose-400 font-medium'}>
-                {sseConnected ? 'EN VIVO (SSE)' : 'RECONECTANDO'}
+              <span className={sseConnected ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
+                {sseConnected ? 'LIVE' : 'DISCONNECTED'}
               </span>
               {lastUpdate && (
-                <span className="text-slate-400 border-l border-slate-700 pl-2">
-                  {lastUpdate.toLocaleTimeString()}
+                <span className="text-slate-500 border-l border-slate-800 pl-2">
+                  {lastUpdate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                 </span>
               )}
             </div>
 
-            {/* User Badge */}
-            <div className="flex items-center gap-2 bg-slate-800/60 py-1 px-2.5 rounded-lg border border-slate-700/60">
-              <div className="text-right hidden sm:block">
-                <div className="text-xs font-semibold text-slate-200">{user?.username}</div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-wider">{user?.role}</div>
+            {/* User Pill Badge */}
+            <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-900/60 border border-white/[0.06]">
+              <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-300">
+                {user?.username.charAt(0).toUpperCase()}
               </div>
+              <span className="text-xs font-medium text-slate-300 hidden sm:inline">
+                {user?.username.split('@')[0]}
+              </span>
               <span
-                className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded ${
+                className={`text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded ${
                   isAdmin
-                    ? 'bg-purple-900/50 text-purple-300 border border-purple-500/30'
-                    : 'bg-sky-900/50 text-sky-300 border border-sky-500/30'
+                    ? 'bg-purple-500/10 text-purple-300 border border-purple-500/30'
+                    : 'bg-sky-500/10 text-sky-300 border border-sky-500/30'
                 }`}
               >
                 {isAdmin ? 'ADMIN' : 'VIEWER'}
               </span>
             </div>
 
-            {/* Logout Button */}
+            {/* Logout Action */}
             <button
               onClick={logout}
               title="Cerrar sesión"
-              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800/60 rounded-lg transition-colors border border-transparent hover:border-rose-500/20"
             >
-              <LogOut className="w-5 h-5" />
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
+
         </div>
       </div>
     </header>
