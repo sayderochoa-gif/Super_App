@@ -1,159 +1,163 @@
-# SismoWatch — Plataforma de Inteligencia Sísmica en Tiempo Real (SuperApp)
+# SeismoAgent: Agente Relacional para Monitoreo y Análisis Sísmico (USGS)
 
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Apache Airflow](https://img.shields.io/badge/Airflow-2.8+-017CEE?logo=apacheairflow&logoColor=white)](https://airflow.apache.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-
-**SismoWatch** es una solución de datos de punta a punta (`production-grade`) diseñada para ingestar, validar, auditar y enriquecer con IA la sismicidad global provista por el catálogo del **USGS (United States Geological Survey)**.
+Sistema autónomo y modular de telemetría y análisis sísmico en tiempo real. Integra la ingesta continua de eventos telúricos desde los servicios geológicos oficiales del **USGS (United States Geological Survey)**, normalización en un modelo relacional en Tercera Forma Normal (3NF) y un agente conversacional equipado con ejecución segura de SQL (*Safe SQL Engine*) e inferencia analítica de lenguaje natural.
 
 ---
 
-## 🌟 Características Principales
+## 1. Arquitectura y Estructura del Proyecto
 
-1. **Ingesta Continua y Resiliente (Airflow 2.8+):**
-   - Ingesta cada 5 minutos del feed GeoJSON de USGS con políticas de reintento exponencial (`retries=3`, `retry_delay=30s`).
-   - Idempotencia total: Inserciones y actualizaciones gestionadas mediante `UPSERT` en todas las capas.
-2. **Arquitectura Lakehouse de Tres Capas:**
-   - `raw`: Almacena el payload JSON crudo con metadatos de ingesta (`audit trail` inmutable).
-   - `staging`: Datos extraídos, normalizados, aplanados y tipados.
-   - `curated`: Datos verificados y analíticamente indexados para consultas sub-segundo.
-3. **Quality Gate Bloqueante (Pandera):**
-   - Validación estricta de coordenadas latitud `[-90, 90]`, longitud `[-180, 180]`, magnitud `[-2.0, 10.0]`, profundidad `[-5.0, 1000.0] km` y tiempo.
-   - Enrutamiento automático de registros rechazados hacia `curated.quarantine` con causa explícita del fallo.
-   - Registro de métricas de calidad en `curated.quality_audit`.
-4. **Motor de IA y Detección de Anomalías:**
-   - Detección de enjambres sísmicos y patrones anómalos multivariados con `IsolationForest`.
-   - Síntesis de reportes ejecutivos diarios con LLM (OpenAI) anclado estrictamente a KPIs deterministas y motor de fallback automático en caso de timeout.
-   - Mitigación activa contra Prompt Injection en campos de texto no confiables.
-5. **Backend Asíncrono de Alto Rendimiento (FastAPI):**
-   - SQLAlchemy 2.0 + asyncpg.
-   - Autenticación JWT con Control de Acceso Basado en Roles (RBAC: `admin`, `viewer`).
-   - Transmisión en tiempo real vía Server-Sent Events (SSE).
-6. **Frontend Moderno (React + Vite + Leaflet + Tailwind CSS):**
-   - Dashboard con indicadores KPIs en vivo y mapa interactivo global.
-   - Marcadores coloreados por magnitud y tooltips detallados.
-   - Visor de reportes ejecutivos IA con exportación en CSV y formato imprimible / PDF.
-   - Pestaña de cuarentena y disparadores de backfill/regeneración exclusivos para administradores.
+El sistema está diseñado bajo una arquitectura en capas desacopladas (Ingesta HTTP $\rightarrow$ Normalización y Persistencia ORM $\rightarrow$ Herramientas de Análisis $\rightarrow$ Orquestador del Agente $\rightarrow$ Interfaces CLI y API):
+
+```text
+agentebot/
+├── .env.example             # Plantilla de variables de entorno (BD, endpoints, LLM)
+├── .env                     # Variables de entorno locales activas
+├── requirements.txt         # Dependencias de producción (SQLAlchemy, Pydantic, etc.)
+├── README.md                # Documentación técnica del repositorio
+├── explic.md                # Guía técnica y ejecutiva para defensa y sustentación
+├── config.py                # Configuración tipada con Pydantic Settings
+├── main.py                  # CLI ejecutable con modo interactivo y banderas automatizadas
+├── database/
+│   ├── __init__.py          # Exportación del paquete de base de datos
+│   ├── connection.py        # Configuración de Engine SQLAlchemy, sessions y WAL en SQLite
+│   └── models.py            # Modelos declarativos 3NF (Location, Earthquake, ImpactMetric)
+├── services/
+│   ├── __init__.py          # Exportación de servicios de datos
+│   ├── usgs_client.py       # Cliente HTTP con timeout, reintentos y parsing de GeoJSON
+│   └── ingestion.py         # Pipeline de normalización espacial, parsing temporal y UPSERT
+└── agent/
+    ├── __init__.py          # Exportación del agente y herramientas
+    ├── tools.py             # Herramientas analíticas, safe SQL executor y esquemas OpenAI
+    ├── knowledge.py         # Base de conocimiento sismológica, prevención y control de formato
+    └── core.py              # Orquestador del agente: Function Calling LLM y motor de reglas offline
+```
 
 ---
 
-## 🚀 Despliegue Rápido con Docker Compose
+## 2. Requisitos Previos
 
-### 1. Clonar y Configurar Entorno
+- **Python:** Versión 3.10 o superior (recomendado Python 3.11 o 3.12).
+- **Gestor de Paquetes:** `pip` y soporte para entornos virtuales (`venv`).
+- **Motor de Base de Datos:**
+  - **SQLite:** Incluido por defecto en la biblioteca estándar de Python (sin instalación adicional).
+  - **PostgreSQL:** Opcional para entornos distribuidos de alta concurrencia.
+- **Acceso de Red:** Salida HTTPS hacia `earthquake.usgs.gov`.
+- **Credenciales OpenAI:** Opcional. Si no se suministra `OPENAI_API_KEY`, el sistema conmuta automáticamente a su motor determinista offline sin degradación de servicio ni errores de ejecución.
+
+---
+
+## 3. Instalación y Configuración
+
+### Paso 1: Clonar el Repositorio y Crear Entorno Virtual
+
+```bash
+cd agentebot
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+*(En Windows PowerShell: `.venv\Scripts\Activate.ps1`)*
+
+### Paso 2: Instalación de Dependencias
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Paso 3: Configurar Variables de Entorno
+
+Copia el archivo de plantilla a `.env`:
+
 ```bash
 cp .env.example .env
 ```
 
-### 2. Levantar el Stack Completo
-```bash
-docker compose up -d --build
+Configura los parámetros según el entorno de despliegue:
+
+```ini
+# Base de datos relacional (por defecto SQLite local)
+DATABASE_URL=sqlite:///./seismic_agent.db
+
+# Endpoint oficial de USGS (Feed de la última hora)
+USGS_FEED_URL=https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson
+
+# Configuración del LLM (Opcional)
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4o-mini
+
+# Registro de eventos
+LOG_LEVEL=INFO
 ```
 
-### 3. Servicios Disponibles
-| Servicio | URL / Puerto | Credenciales por Defecto |
-| :--- | :--- | :--- |
-| **Frontend Web SPA** | [http://localhost:3000](http://localhost:3000) | Ver sección de roles abajo |
-| **Backend REST & SSE API** | [http://localhost:8000/docs](http://localhost:8000/docs) | Swagger interactivo con soporte JWT |
-| **Airflow Webserver** | [http://localhost:8080](http://localhost:8080) | `airflow` / `airflow` |
-| **PostgreSQL Database** | `localhost:5432` | `postgres` / `postgres_master_pass` |
-
 ---
 
-## 🔐 Modelo de Roles y Credenciales Preconfiguradas
+## 4. Puesta en Marcha
 
-El sistema implementa RBAC estricto a nivel de endpoints y vistas UI:
+El archivo [`main.py`](main.py) actúa como el punto de entrada unificado para operaciones automatizadas o sesiones interactivas.
 
-| Rol | Usuario | Contraseña | Permisos y Accesos |
-| :--- | :--- | :--- | :--- |
-| **Admin** | `admin@sismowatch.com` | `AdminSismoWatch2025!` | **Acceso Total:** Dashboard, reportes IA, exportación, inspección detallada de cuarentena (con visor de payload crudo), disparador manual de backfill (`POST /api/admin/backfill`) y regeneración de reporte (`POST /api/admin/reports/regenerate`). |
-| **Viewer** | `viewer@sismowatch.com` | `ViewerSismoWatch2025!` | **Solo Lectura:** Dashboard, telemetría sísmica, mapa interactivo, lectura de reportes IA, exportación (CSV/PDF) y stream SSE. **Bloqueado:** Cuarentena y botones de administración ocultos en UI y protegidos con `403 Forbidden` en la API. |
-| **Visitante** | *Sin token* | *N/A* | Redirección obligatoria a `/login`. Cualquier petición a `/api/*` responde `401 Unauthorized`. |
+### A. Interfaz Interactiva (REPL Conversacional)
 
----
-
-## 🧪 Ejecución de Pruebas Automatizadas
-
-El proyecto incluye una suite completa de pruebas con Pytest:
+Inicia la consola interactiva ejecutando:
 
 ```bash
-# Activar entorno virtual
-source .venv/bin/activate
-
-# Ejecutar la suite completa
-pytest -v tests/
+python main.py
 ```
 
-### Pruebas Incluidas:
-1. `tests/test_transformations.py`: Valida el aplanamiento de GeoJSON anidado, extracción de coordenadas y conversión epoch UTC.
-2. `tests/test_quality_rules.py`: Valida que registros correctos pasen y registros físicamente imposibles (e.g. latitud 150°, magnitud 15.0) se aíslen con su causa exacta en cuarentena.
-3. `tests/test_dag_integrity.py`: Valida sintaxis, grafos acíclicos y estructura de los 4 DAGs de Airflow.
-4. `tests/test_api_rbac.py`: Valida códigos de estado `401 Unauthorized` para visitantes, `403 Forbidden` para viewers en rutas restringidas y `200 OK` para administradores.
+Comandos internos disponibles dentro del REPL:
+- `sync` : Dispara la ingesta inmediata de la última telemetría del USGS.
+- `stats` : Computa métricas agregadas del catálogo (magnitud media, sismo más potente, zonas activas).
+- `tsunami` : Filtra eventos con alerta o protocolo de tsunami activado.
+- `schema` : Imprime la definición DDL de las tablas relacionales.
+- `sql <consulta>` : Ejecuta consultas directas de solo lectura (ej. `sql SELECT count(*) FROM earthquakes`).
+- `reset` : Limpia el contexto conversacional del agente.
+- `help` : Muestra la guía de comandos.
+- `exit` o `quit` : Finaliza la ejecución.
 
----
+También admite cualquier consulta en lenguaje natural:
+- *"¿Cuáles fueron los sismos más fuertes de la última hora?"*
+- *"¿Qué medidas de prevención debo tomar durante un terremoto?"*
+- *"Muéstrame sismos con magnitud mayor a 3.0"*
 
-## 🛡️ Auditoría de Seguridad (Bandit)
+### B. Ejecución por Banderas CLI (Automatización & Cron Jobs)
 
-Para validar la ausencia de vulnerabilidades estáticas en el backend:
+Para integraciones con pipelines, tareas programadas en crontab o DAGs de Apache Airflow:
 
 ```bash
-bandit -r backend/ -ll
+# Sincronización desatendida del feed USGS
+python main.py --sync
+
+# Extracción de estadísticas en consola
+python main.py --stats
+
+# Consulta puntual de eventos con alerta de tsunami
+python main.py --tsunami
+
+# Ejecución de una consulta específica en un solo paso
+python main.py --query "¿Cuáles son las 3 zonas con mayor sismicidad?"
+
+# Sincronización con un feed alternativo (ej. sismos de las últimas 24 horas)
+python main.py --feed "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson" --sync
 ```
-*Resultado: 0 vulnerabilidades de severidad Media o Alta detectadas.*
 
 ---
 
-## 📁 Estructura del Código
+## 5. Fuente de Datos (USGS API)
 
-```text
-sismowatch/
-├── docker-compose.yml          # Orquestación completa de 6 contenedores
-├── .env.example                # Plantilla de variables de entorno seguras
-├── .gitignore                  # Reglas de exclusión para Git
-├── README.md                   # Guía de despliegue y referencia
-├── docs/
-│   └── ARQUITECTURA.md         # Documento detallado de diseño y diagramas Mermaid
-├── sql/
-│   └── init-db.sql             # Esquemas (raw, staging, curated), roles y DDL
-├── airflow/
-│   ├── Dockerfile              # Imagen Airflow 2.8 con dependencias científicas
-│   ├── requirements.txt        # Pandera, Pandas, Scikit-learn, etc.
-│   ├── dags/
-│   │   ├── dag_ingestion_realtime.py     # Ingesta cada 5 min desde USGS
-│   │   ├── dag_transformation_quality.py # Staging, Pandera Gate y Curated
-│   │   ├── dag_ai_daily_report.py        # KPIs deterministas, IsolationForest y LLM
-│   │   └── dag_backfill_historical.py    # Backfill parametrizado por ventana
-│   └── plugins/
-│       ├── quality_engine.py   # Pandera schemas, validación y frescura
-│       ├── ai_engine.py        # KPIs, detección de enjambres y post-validación
-│       └── db_utils.py         # Utilidades de base de datos e idempotencia UPSERT
-├── backend/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   └── app/
-│       ├── main.py             # FastAPI entrypoint, CORS y seed automático
-│       ├── config.py           # Configuración Pydantic Settings
-│       ├── database.py         # SQLAlchemy 2.0 async engine
-│       ├── security.py         # Bcrypt, JWT, sanitización y RBAC
-│       ├── models/             # Curated, Staging, Raw, Users, Quarantine
-│       ├── schemas/            # Pydantic v2 DTOs
-│       ├── services/           # KPIs, Airflow REST client, SSE broadcaster, exports
-│       └── routers/            # auth, kpis, events, stats, reports, stream, admin
-├── frontend/
-│   ├── Dockerfile              # Multi-stage build Nginx
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── src/
-│       ├── App.tsx             # Orquestación de pestañas y cliente SSE
-│       ├── context/            # AuthContext (JWT & roles)
-│       ├── services/           # Cliente HTTP Axios/Fetch
-│       └── components/         # Navbar, Login, Dashboard, SeismicMap, Reports, Pipeline
-└── tests/
-    ├── conftest.py             # Fixtures compartidas y mock tokens
-    ├── test_transformations.py # Pruebas de aplanamiento GeoJSON
-    ├── test_quality_rules.py   # Pruebas de Pandera Quality Gate y Cuarentena
-    ├── test_dag_integrity.py   # Pruebas de sintaxis y ciclos de Airflow DAGs
-    └── test_api_rbac.py        # Pruebas de autorización RBAC (401, 403, 200)
-```
+- **Endpoint Primario:**  
+  `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson`
+- **Formato:** GeoJSON estándar (RFC 7946) con array `features[]` y metadatos en `metadata`.
+- **Frecuencia de Actualización del USGS:** El feed se regenera cada 60 segundos con los sismos registrados y revisados globalmente.
+- **Feeds Alternativos Soportados:**
+  - Últimas 24 horas (M1.0+): `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/1.0_day.geojson`
+  - Últimos 7 días (M4.5+): `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson`
+
+---
+
+## 6. Seguridad y Políticas de Ejecución SQL
+
+La herramienta interna `execute_safe_sql` garantiza la integridad de la base de datos ante consultas dinámicas generadas por el agente o el usuario:
+1. **Solo Lectura:** Únicamente se permiten declaraciones que inicien con `SELECT` o `WITH` (CTE).
+2. **Aislamiento de Literales:** Las cadenas entre comillas son ignoradas al evaluar palabras reservadas para evitar falsos positivos en cláusulas de texto.
+3. **Bloqueo de Inyecciones y Modificaciones:** Se rechazan tajantemente palabras clave DDL/DML (`DROP`, `DELETE`, `INSERT`, `UPDATE`, `ALTER`, `TRUNCATE`, `PRAGMA`, etc.) y encadenamiento de comandos mediante punto y coma (`;`).
+4. **Paginación Forzada:** Si la consulta omite la cláusula `LIMIT`, el motor agrega automáticamente `LIMIT 50`.

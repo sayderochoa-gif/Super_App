@@ -36,7 +36,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#07090e] px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-transparent px-4 relative overflow-hidden">
       {/* Subtle ambient lighting backdrop */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-sky-600/10 via-indigo-600/10 to-transparent rounded-full blur-[120px] pointer-events-none"></div>
 

@@ -12,6 +12,7 @@ class KPIsResponse(BaseModel):
     max_magnitude_24h: float
     avg_magnitude_24h: float
     tsunami_alerts_24h: int
+    tsunami_alerts_total: int = 0
     last_quality_score: float
     last_earthquake_time: Optional[datetime] = None
 

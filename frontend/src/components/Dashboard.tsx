@@ -29,7 +29,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ newEventsFromSSE }) => {
         api.getEvents({
           min_magnitude: minMagFilter > 0 ? minMagFilter : undefined,
           region: searchTerm || undefined,
-          limit: 150
+          limit: 500
         }),
         api.getTimeseries(24),
         api.getMagnitudeDistribution()
@@ -129,11 +129,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ newEventsFromSSE }) => {
             <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Alertas Tsunami</span>
             <Waves className="w-3.5 h-3.5 text-cyan-400" />
           </div>
-          <div className={`text-2xl font-bold font-mono tracking-tight ${(kpis?.tsunami_alerts_24h ?? 0) > 0 ? 'text-rose-500 animate-pulse' : 'text-slate-100'}`}>
+          <div className={`text-2xl font-bold font-mono tracking-tight ${(kpis?.tsunami_alerts_24h ?? 0) > 0 ? 'text-rose-400 animate-pulse' : 'text-slate-100'}`}>
             {kpis?.tsunami_alerts_24h ?? 0}
           </div>
-          <div className="text-[10px] text-slate-500 font-mono">
-            Disparos de protocolo costero
+          <div className="text-[10px] text-slate-400 font-mono">
+            {(kpis?.tsunami_alerts_24h ?? 0) > 0 ? 'Eventos con alerta costera activa' : 'Sin alertas vigentes'}
           </div>
         </div>
 

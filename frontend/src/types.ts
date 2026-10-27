@@ -20,6 +20,7 @@ export interface KPIs {
   max_magnitude_24h: number;
   avg_magnitude_24h: number;
   tsunami_alerts_24h: number;
+  tsunami_alerts_total?: number;
   last_quality_score: number;
   last_earthquake_time: string | null;
 }
@@ -106,4 +107,12 @@ export interface TimeseriesPoint {
   count: number;
   avg_magnitude: number;
   max_magnitude: number;
+}
+
+export interface AgentMessage {
+  id: string;
+  sender: 'user' | 'agent';
+  text: string;
+  timestamp: string;
+  isError?: boolean;
 }

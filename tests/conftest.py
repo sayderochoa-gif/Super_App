@@ -8,8 +8,9 @@ from pathlib import Path
 import pytest
 from datetime import datetime, timezone, timedelta
 
-# Ensure airflow/plugins, airflow/dags, and backend are on PYTHONPATH
+# Ensure project root, airflow/plugins, airflow/dags, and backend are on PYTHONPATH
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "airflow" / "plugins"))
 sys.path.insert(0, str(PROJECT_ROOT / "airflow" / "dags"))
 sys.path.insert(0, str(PROJECT_ROOT / "backend"))

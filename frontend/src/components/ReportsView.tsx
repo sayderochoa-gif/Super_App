@@ -51,14 +51,50 @@ export const ReportsView: React.FC = () => {
     }
   };
 
-  const handleExportCSV = () => {
-    const token = localStorage.getItem('sismowatch_token');
-    window.open(`/api/reports/export?export_type=csv&target=reports&token=${token}`, '_blank');
+  const handleExportCSV = async () => {
+    try {
+      const token = localStorage.getItem('sismowatch_token');
+      const response = await fetch('/api/reports/export?export_type=csv&target=earthquakes', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (!response.ok) throw new Error('Error al generar CSV');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sismowatch_actividades_sismicas_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      console.error('Error exportando CSV:', err);
+      const token = localStorage.getItem('sismowatch_token');
+      window.open(`/api/reports/export?export_type=csv&target=earthquakes&token=${token}`, '_blank');
+    }
   };
 
-  const handleExportPrintable = () => {
-    const token = localStorage.getItem('sismowatch_token');
-    window.open(`/api/reports/export?export_type=html&target=reports&token=${token}`, '_blank');
+  const handleExportPDF = async () => {
+    try {
+      const token = localStorage.getItem('sismowatch_token');
+      const response = await fetch('/api/reports/export?export_type=pdf&target=earthquakes', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (!response.ok) throw new Error('Error al generar PDF');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `sismowatch_informe_sismico_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      console.error('Error exportando PDF:', err);
+      const token = localStorage.getItem('sismowatch_token');
+      window.open(`/api/reports/export?export_type=pdf&target=earthquakes&token=${token}`, '_blank');
+    }
   };
 
   return (
@@ -88,7 +124,7 @@ export const ReportsView: React.FC = () => {
           </button>
 
           <button
-            onClick={handleExportPrintable}
+            onClick={handleExportPDF}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 text-xs font-medium border border-white/[0.07] transition-all"
           >
             <Printer className="w-3.5 h-3.5" />

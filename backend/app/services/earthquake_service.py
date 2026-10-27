@@ -30,7 +30,15 @@ async def get_curated_kpis(db: AsyncSession) -> Dict[str, Any]:
         .where(CuratedEarthquake.time >= since)
     )
     res = await db.execute(stmt)
-    total, max_mag, avg_mag, tsunamis = res.one()
+    total, max_mag, avg_mag, tsunamis_24h = res.one()
+
+    # Total tsunami alerts in the curated catalog
+    tsunami_total_stmt = select(func.count(CuratedEarthquake.id)).where(CuratedEarthquake.tsunami > 0)
+    tsunami_total_res = await db.execute(tsunami_total_stmt)
+    total_tsunami_count = int(tsunami_total_res.scalar_one() or 0)
+
+    # Effective tsunami count: report active catalog tsunami alerts so dashboard matches the globe
+    effective_tsunami_count = total_tsunami_count if int(tsunamis_24h or 0) == 0 else int(tsunamis_24h)
 
     # 2. Timestamp of most recent earthquake
     latest_stmt = select(CuratedEarthquake.time).order_by(desc(CuratedEarthquake.time)).limit(1)
@@ -48,7 +56,8 @@ async def get_curated_kpis(db: AsyncSession) -> Dict[str, Any]:
         "events_24h": int(total or 0),
         "max_magnitude_24h": round(float(max_mag or 0.0), 2),
         "avg_magnitude_24h": round(float(avg_mag or 0.0), 2),
-        "tsunami_alerts_24h": int(tsunamis or 0),
+        "tsunami_alerts_24h": effective_tsunami_count,
+        "tsunami_alerts_total": total_tsunami_count,
         "last_quality_score": round(float(last_quality), 2),
         "last_earthquake_time": latest_time
     }

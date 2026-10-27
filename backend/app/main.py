@@ -23,7 +23,8 @@ from app.routers import (
     reports,
     stream,
     pipeline,
-    admin
+    admin,
+    agent
 )
 
 logging.basicConfig(
@@ -138,3 +139,4 @@ app.include_router(reports.router)
 app.include_router(stream.router)
 app.include_router(pipeline.router)
 app.include_router(admin.router)
+app.include_router(agent.router)

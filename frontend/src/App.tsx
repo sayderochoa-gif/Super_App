@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
-import { Navbar } from './components/Navbar';
+import { Sidebar, NavTab } from './components/Sidebar';
 import { Login } from './components/Login';
 import { Dashboard } from './components/Dashboard';
 import { ReportsView } from './components/ReportsView';
 import { PipelineView } from './components/PipelineView';
+import { AgentView } from './components/AgentView';
+import { AgentWidget } from './components/AgentWidget';
 import { Earthquake } from './types';
 
 export const App: React.FC = () => {
-  const { isAuthenticated, token } = useAuth();
-  const [currentTab, setCurrentTab] = useState<'dashboard' | 'reports' | 'pipeline'>('dashboard');
+  const { isAuthenticated, token, isAdmin } = useAuth();
+  const [currentTab, setCurrentTab] = useState<NavTab>('dashboard');
   const [sseConnected, setSseConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [newEventsFromSSE, setNewEventsFromSSE] = useState<Earthquake[]>([]);
+
+  // RBAC route guard: viewers have access to Telemetría Sísmica (dashboard) and Agente Sísmico (agent)
+  useEffect(() => {
+    if (!isAdmin && currentTab !== 'dashboard' && currentTab !== 'agent') {
+      setCurrentTab('dashboard');
+    }
+  }, [isAdmin, currentTab]);
 
   // SSE Stream Management
   useEffect(() => {
@@ -73,23 +82,29 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
-      <Navbar
+    <div className="min-h-screen bg-transparent text-slate-100 flex flex-col md:flex-row font-sans">
+      <Sidebar
         currentTab={currentTab}
         setCurrentTab={setCurrentTab}
         sseConnected={sseConnected}
         lastUpdate={lastUpdate}
       />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {currentTab === 'dashboard' && <Dashboard newEventsFromSSE={newEventsFromSSE} />}
-        {currentTab === 'reports' && <ReportsView />}
-        {currentTab === 'pipeline' && <PipelineView />}
-      </main>
+      <div className="flex-1 flex flex-col min-w-0">
+        <main className="flex-1 max-w-[1560px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {currentTab === 'dashboard' && <Dashboard newEventsFromSSE={newEventsFromSSE} />}
+          {currentTab === 'agent' && <AgentView />}
+          {currentTab === 'reports' && isAdmin && <ReportsView />}
+          {currentTab === 'pipeline' && isAdmin && <PipelineView />}
+        </main>
 
-      <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
-        SismoWatch Platform &copy; {new Date().getFullYear()} SuperApp Data Engineering & AI Solutions Architecture
-      </footer>
+        <footer className="border-t border-white/[0.06] bg-black/40 backdrop-blur-md py-4 text-center text-xs text-slate-500">
+          SismoWatch Platform &copy; {new Date().getFullYear()} SuperApp Data Engineering & AI Solutions Architecture
+        </footer>
+      </div>
+
+      {/* Floating Quick Agent Assistant across all views */}
+      <AgentWidget />
     </div>
   );
 };

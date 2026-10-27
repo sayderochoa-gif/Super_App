@@ -94,5 +94,26 @@ export const api = {
   triggerReportRegenerate: () =>
     request<{ status: string; message: string }>('/api/admin/reports/regenerate', {
       method: 'POST'
-    })
+    }),
+
+  // Seismic Relational Agent (Viewer & Admin)
+  chatAgent: (message: string, reset: boolean = false) =>
+    request<{ response: string; user_role: string; timestamp: string }>('/api/agent/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message, reset })
+    }),
+
+  syncAgent: () =>
+    request<{ status: string; triggered_by: string; role: string; data: any }>('/api/agent/sync', {
+      method: 'POST'
+    }),
+
+  getAgentStats: () =>
+    request<any>('/api/agent/stats'),
+
+  getAgentTsunami: () =>
+    request<any>('/api/agent/tsunami'),
+
+  getAgentSchema: () =>
+    request<{ schema: string }>('/api/agent/schema')
 };

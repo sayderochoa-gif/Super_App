@@ -7,7 +7,15 @@
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    @apply bg-[#080b11] text-slate-200 antialiased selection:bg-sky-500/20 selection:text-sky-300;
+    background-color: #030712;
+    background-image: 
+      radial-gradient(ellipse at 50% 15%, rgba(14, 23, 42, 0.45) 0%, rgba(3, 7, 18, 0.85) 85%),
+      url('/textures/night-sky.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    @apply text-slate-200 antialiased selection:bg-sky-500/20 selection:text-sky-300;
   }
 
   code, pre, .font-mono {
@@ -65,4 +73,48 @@
 
 .leaflet-container {
   font-family: inherit !important;
+}
+
+/* SismoWatch Seismic Letter Collapse & Reconstruct Animation */
+@keyframes seismicLetterDrop {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  6% {
+    transform: translateY(-2px) rotate(-3deg);
+  }
+  12% {
+    transform: translateY(2px) rotate(3deg);
+  }
+  24% {
+    /* Letters collapse and drop downward */
+    transform: translateY(26px) rotate(var(--fall-rot, 18deg)) scale(0.9);
+    opacity: 0.35;
+  }
+  38% {
+    /* Impact and tumble at the bottom */
+    transform: translateY(30px) rotate(var(--fall-rot, -12deg)) scale(0.85);
+    opacity: 0.2;
+  }
+  52% {
+    /* Reconstruct & spring back up */
+    transform: translateY(-5px) rotate(2deg) scale(1.05);
+    opacity: 0.9;
+  }
+  64% {
+    transform: translateY(1.5px) rotate(-1deg) scale(0.99);
+    opacity: 1;
+  }
+  72%, 100% {
+    /* Restored to completely normal steady state */
+    transform: translateY(0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.seismic-letter {
+  display: inline-block;
+  animation: seismicLetterDrop 6s infinite ease-in-out;
+  transform-origin: bottom center;
 }
